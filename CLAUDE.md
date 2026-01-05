@@ -280,4 +280,27 @@ const GOOGLE_SHEET_URL = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIC
 
 ---
 
+## ✅ DEPLOYMENT GITHUB PAGES - SELESAI
+
+### URL Live:
+**https://database-zuma.github.io/-zuma-wholesale/Form%20Order%20Wholesale.html**
+
+### Repository:
+https://github.com/database-zuma/-zuma-wholesale
+
+### Default Users:
+| Username | Password | Role |
+|----------|----------|------|
+| admin | admin123 | Admin |
+| spv | spv123 | SPV Wholesale |
+| manager | manager123 | Branch Manager |
+| cs | cs123 | Customer Service |
+
+### Catatan:
+- Data (arsip order, logo) disimpan di localStorage browser masing-masing
+- Setiap device/browser perlu setup logo sendiri
+- Default users otomatis tersedia di semua device
+
+---
+
 *Last updated: 2026-01-05*
