@@ -3042,7 +3042,8 @@
         const DEFAULT_USERS = [
             { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrator' },
             { username: 'spv', password: 'spv123', role: 'spv', name: 'SPV Wholesale' },
-            { username: 'manager', password: 'manager123', role: 'manager', name: 'Branch Manager' }
+            { username: 'manager', password: 'manager123', role: 'manager', name: 'Branch Manager' },
+            { username: 'cs', password: 'cs123', role: 'customer', name: 'Customer Service' }
         ];
 
         function initUsers() {
@@ -3051,6 +3052,19 @@
                 // First time - create default users
                 localStorage.setItem('fo_users', JSON.stringify(DEFAULT_USERS));
                 console.log('Default users created');
+            } else {
+                // Check if any default users are missing and add them
+                let updated = false;
+                DEFAULT_USERS.forEach(defaultUser => {
+                    if (!users.find(u => u.username === defaultUser.username)) {
+                        users.push(defaultUser);
+                        updated = true;
+                    }
+                });
+                if (updated) {
+                    localStorage.setItem('fo_users', JSON.stringify(users));
+                    console.log('New default users added');
+                }
             }
         }
 
