@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Setup Logo MBB - Form Order</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2E7D32;
+            text-align: center;
+        }
+        .company-info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .company-info h3 {
+            color: #1b5e20;
+            margin: 0 0 10px 0;
+        }
+        .company-info p {
+            margin: 5px 0;
+            font-size: 13px;
+            color: #333;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .upload-area {
+            border: 3px dashed #4CAF50;
+            padding: 40px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f1f8e9;
+        }
+        .upload-area:hover {
+            border-color: #2E7D32;
+            background: #e8f5e9;
+        }
+        .preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        button:hover {
+            background: #388E3C;
+        }
+        button.danger {
+            background: #e74c3c;
+        }
+        button.danger:hover {
+            background: #c0392b;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #666;
+            text-decoration: none;
+        }
+        .back-link a:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Setup Logo MBB</h1>
+
+        <div class="company-info">
+            <h3>CV. MAKMUR BESAR BERSAMA</h3>
+            <p>Perum AURI Jalan Avia No. 178</p>
+            <p>Kel. Lemahputro, Kec. Sidoarjo</p>
+            <p>Kab. Sidoarjo, Jawa Timur</p>
+            <p>Email: cvmakmurbesarbersama@gmail.com</p>
+        </div>
+
+        <div id="currentStatus" class="status warning">
+            Checking...
+        </div>
+
+        <div class="preview" id="previewArea" style="display: none;">
+            <p><strong>Logo MBB saat ini:</strong></p>
+            <img id="logoPreview" src="">
+        </div>
+
+        <label class="upload-area" for="logoInput">
+            <div>
+                <p style="font-size: 40px; margin: 0;">📷</p>
+                <p><strong>Klik untuk pilih file logo MBB</strong></p>
+                <p style="color: #666; font-size: 12px;">Format: PNG, JPG (Rekomendasi: mbb.png)</p>
+            </div>
+            <input type="file" id="logoInput" accept="image/*">
+        </label>
+
+        <button onclick="saveLogo()" id="saveBtn" style="display: none;">
+            Simpan Logo MBB
+        </button>
+
+        <button onclick="clearLogo()" class="danger" id="clearBtn" style="display: none;">
+            Hapus Logo MBB dari Cache
+        </button>
+
+        <p style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+            Setelah logo tersimpan, buka Form Order. Pilih MBB saat SPV TTD, dan logo akan muncul di PDF.
+        </p>
+
+        <div class="back-link">
+            <a href="setup-logo.html">Setup Logo UBB</a>
+        </div>
+    </div>
+
+    <script>
+        let selectedLogoBase64 = null;
+        const STORAGE_KEY = 'fo_logo_mbb_base64';
+
+        // Cek status logo saat ini
+        function checkStatus() {
+            const cachedLogo = localStorage.getItem(STORAGE_KEY);
+            const statusDiv = document.getElementById('currentStatus');
+            const previewArea = document.getElementById('previewArea');
+            const clearBtn = document.getElementById('clearBtn');
+
+            if (cachedLogo) {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ Logo MBB sudah tersimpan di browser';
+                previewArea.style.display = 'block';
+                document.getElementById('logoPreview').src = cachedLogo;
+                clearBtn.style.display = 'block';
+            } else {
+                statusDiv.className = 'status warning';
+                statusDiv.innerHTML = '⚠️ Belum ada logo MBB tersimpan. Silakan upload logo.';
+                previewArea.style.display = 'none';
+                clearBtn.style.display = 'none';
+            }
+        }
+
+        // Handle file selection
+        document.getElementById('logoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    selectedLogoBase64 = event.target.result;
+                    document.getElementById('logoPreview').src = selectedLogoBase64;
+                    document.getElementById('previewArea').style.display = 'block';
+                    document.getElementById('saveBtn').style.display = 'block';
+
+                    document.getElementById('currentStatus').className = 'status warning';
+                    document.getElementById('currentStatus').innerHTML = '📷 Logo dipilih: ' + file.name + ' - Klik "Simpan Logo MBB" untuk menyimpan';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Save logo
+        function saveLogo() {
+            if (selectedLogoBase64) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, selectedLogoBase64);
+                    document.getElementById('currentStatus').className = 'status success';
+                    document.getElementById('currentStatus').innerHTML = '✅ Logo MBB berhasil disimpan! Silakan buka Form Order.';
+                    document.getElementById('saveBtn').style.display = 'none';
+                    document.getElementById('clearBtn').style.display = 'block';
+                    alert('Logo MBB berhasil disimpan!\n\nSekarang buka Form Order, pilih MBB saat SPV TTD, dan generate PDF.');
+                } catch (e) {
+                    alert('Gagal menyimpan logo: ' + e.message);
+                }
+            }
+        }
+
+        // Clear logo
+        function clearLogo() {
+            if (confirm('Yakin ingin menghapus logo MBB dari cache?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                checkStatus();
+                document.getElementById('saveBtn').style.display = 'none';
+                selectedLogoBase64 = null;
+            }
+        }
+
+        // Initialize
+        checkStatus();
+    </script>
+</body>
+</html>
