@@ -627,7 +627,7 @@
                     </div>
 
                     <!-- Company Selection Section (SPV Only) -->
-                    <div id="companySelectionSection" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd;">
+                    <div id="companySelectionSection" style="display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd;">
                         <h4 style="color: #333; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase;">Pilihan Entitas Perusahaan</h4>
 
                         <!-- Company Selector - Only visible when SPV belum TTD -->
@@ -2378,19 +2378,29 @@
             document.getElementById('detailNameCustomer').textContent = customerName;
 
             // Setup Company Selection Section
+            const companySelectionSection = document.getElementById('companySelectionSection');
             const companySelector = document.getElementById('companySelector');
             const companyDisplay = document.getElementById('companyDisplay');
             const companyNote = document.getElementById('companyNote');
 
-            if (order.signedSPV && order.sigSPV) {
-                // SPV sudah TTD - tampilkan company yang dipilih, sembunyikan selector
+            // Hanya SPV dan Admin yang bisa melihat section entitas
+            const loggedInUser = JSON.parse(localStorage.getItem('fo_current_user') || 'null');
+            const canViewCompany = loggedInUser && (loggedInUser.role === 'spv' || loggedInUser.role === 'admin');
+
+            if (!canViewCompany) {
+                // Customer & Manager tidak pernah melihat section ini
+                companySelectionSection.style.display = 'none';
+            } else if (order.signedSPV && order.sigSPV) {
+                // SPV/Admin: SPV sudah TTD - tampilkan company yang dipilih (read-only)
+                companySelectionSection.style.display = 'block';
                 companySelector.style.display = 'none';
                 companyDisplay.style.display = 'block';
                 companyNote.style.display = 'none';
                 const companyName = order.company === 'MBB' ? 'MBB - CV. Makmur Besar Bersama' : 'UBB - CV. Untung Besar Bersama';
                 document.getElementById('selectedCompanyText').textContent = companyName;
             } else {
-                // SPV belum TTD - tampilkan selector
+                // SPV/Admin: SPV belum TTD - tampilkan selector
+                companySelectionSection.style.display = 'block';
                 companySelector.style.display = 'flex';
                 companyDisplay.style.display = 'none';
                 companyNote.style.display = 'block';
