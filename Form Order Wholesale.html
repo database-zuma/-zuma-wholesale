@@ -1439,7 +1439,7 @@
                         return `
                             <div class="sku-suggestion-item" onclick="selectSKU(${itemId}, '${item.sku}')">
                                 <div class="sku-code">${item.sku} <span class="stock-indicator ${stockClass}">Stock: ${item.stock}</span></div>
-                                <div class="sku-details">${item.nama} | ${item.gender} | ${item.series} | Rp ${item.harga.toLocaleString('id-ID')}</div>
+                                <div class="sku-details">${item.nama} | ${item.gender} | ${item.series} | Rp ${(item.harga * 12).toLocaleString('id-ID')}/box</div>
                             </div>
                         `;
                     }).join('');
@@ -1466,8 +1466,12 @@
                 // Hitung diskon berdasarkan gender
                 // BABY = 30%, lainnya (LADIES, MEN) = 40%
                 const discountPercent = product.gender.toUpperCase() === 'BABY' ? 30 : 40;
-                const hargaNormal = product.harga;
+
+                // Harga dari sheet adalah per pair, kalikan 12 untuk harga per box (1 box = 12 pairs)
+                const hargaPerPair = product.harga;
+                const hargaNormal = hargaPerPair * 12; // Harga per box
                 const hargaDiskon = Math.round(hargaNormal * (100 - discountPercent) / 100);
+                const hargaDiskonPerPair = Math.round(hargaPerPair * (100 - discountPercent) / 100);
 
                 item.querySelector('.item-sku-input').value = product.sku;
                 item.querySelector('.item-name').value = product.nama;
@@ -1476,6 +1480,7 @@
                 item.querySelector('.item-price-normal').value = `Rp ${hargaNormal.toLocaleString('id-ID')}`;
                 item.querySelector('.item-discount').value = `${discountPercent}%`;
                 item.querySelector('.item-price').value = hargaDiskon;
+                item.querySelector('.item-price-info').textContent = `Harga per pair: Rp ${hargaDiskonPerPair.toLocaleString('id-ID')} (sebelum diskon: Rp ${hargaPerPair.toLocaleString('id-ID')})`;
                 item.querySelector('.item-stock-display').textContent = `Stock: ${product.stock} | MOQ: ${product.moq}`;
                 item.querySelector('.sku-suggestions').style.display = 'none';
 
@@ -1545,7 +1550,7 @@
                         <!-- Row 2: Harga & Qty -->
                         <div class="item-row" style="grid-template-columns: 1.2fr 0.8fr 1.2fr 1fr; margin-bottom: 8px;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>Harga Normal</label>
+                                <label>Harga/Box</label>
                                 <input type="text" class="item-price-normal" placeholder="Auto-fill" readonly style="text-decoration: line-through; color: #999; text-align: right;">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
@@ -1553,13 +1558,16 @@
                                 <input type="text" class="item-discount" placeholder="Auto-fill" readonly style="color: #e74c3c; font-weight: bold; text-align: center;">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label>Harga Diskon</label>
+                                <label>Diskon/Box</label>
                                 <input type="number" class="item-price" placeholder="Auto-fill" readonly style="color: #27ae60; font-weight: bold; text-align: right;">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <label>Qty (Box) *</label>
                                 <input type="number" class="item-qty" placeholder="0" min="1" onchange="calculateTotal()" style="text-align: center; font-weight: bold;">
                             </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 5px;">
+                            <small class="item-price-info" style="color: #2E75B5; font-style: italic;"></small>
                         </div>
                         <div class="form-group">
                             <small class="item-stock-display" style="color: #666; font-style: italic;">Pilih SKU untuk melihat stock & MOQ</small>
@@ -1890,7 +1898,7 @@
 
             doc.autoTable({
                 startY: 92,
-                head: [['No', 'SKU', 'Nama Produk', 'Gender', 'Diskon', 'Harga Diskon', 'Qty (Box)', 'Subtotal']],
+                head: [['No', 'SKU', 'Nama Produk', 'Gender', 'Diskon', 'Harga/Box', 'Qty (Box)', 'Subtotal']],
                 body: orderItems,
                 foot: [[
                     { content: 'TOTAL ORDER', colSpan: 6, styles: { halign: 'center', fontStyle: 'bold' } },
@@ -1921,10 +1929,11 @@
             doc.text('CATATAN:', 15, finalY);
             doc.setFont('helvetica', 'normal');
             const notes = [
-                '1. Harga sudah termasuk diskon wholesale (40%-50% untuk offline store, 30% untuk baby products)',
-                '2. Harga BELUM termasuk ongkos kirim',
-                '3. Stock terbatas dan dapat berubah sewaktu-waktu',
-                '4. Form Order ini valid selama 1x24 jam sejak diterbitkan'
+                '1. Harga adalah harga per box (1 box = 12 pairs), sudah termasuk diskon wholesale',
+                '2. Diskon: 40%-50% untuk offline store (LADIES & MEN), 30% untuk baby products',
+                '3. Harga BELUM termasuk ongkos kirim',
+                '4. Stock terbatas dan dapat berubah sewaktu-waktu',
+                '5. Form Order ini valid selama 1x24 jam sejak diterbitkan'
             ];
             let noteY = finalY + 5;
             notes.forEach(note => {
@@ -2291,7 +2300,7 @@
 
                 let tableHTML;
                 if (isNewFormat) {
-                    // Format baru: No, SKU, Nama, Gender, Price, Diskon, Harga Diskon, Qty, Subtotal
+                    // Format baru: No, SKU, Nama, Gender, Harga/Box, Diskon, Harga Diskon/Box, Qty, Subtotal
                     tableHTML = `
                         <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                             <thead>
@@ -2300,9 +2309,9 @@
                                     <th style="padding: 6px; border: 1px solid #ddd;">SKU</th>
                                     <th style="padding: 6px; border: 1px solid #ddd;">Nama Produk</th>
                                     <th style="padding: 6px; border: 1px solid #ddd;">Gender</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd;">Price</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd;">Harga/Box</th>
                                     <th style="padding: 6px; border: 1px solid #ddd;">Diskon</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd;">Harga Diskon</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd;">Diskon/Box</th>
                                     <th style="padding: 6px; border: 1px solid #ddd;">Qty</th>
                                     <th style="padding: 6px; border: 1px solid #ddd;">Subtotal</th>
                                 </tr>
@@ -2869,7 +2878,7 @@
 
             doc.autoTable({
                 startY: tableStartY,
-                head: [['SKU', 'Product', 'Qty', 'Price', 'Disc', 'After Disc', 'Total']],
+                head: [['SKU', 'Product', 'Qty', 'Harga/Box', 'Disc', 'Diskon/Box', 'Total']],
                 body: tableBody,
                 theme: 'plain',
                 headStyles: {
